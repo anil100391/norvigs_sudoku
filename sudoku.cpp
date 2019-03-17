@@ -4,7 +4,9 @@
 #include <bitset>
 #include <cassert>
 #include <iomanip>
+#include <fstream>
 #include <iostream>
+#include <ctime>
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
@@ -204,6 +206,7 @@ public:
             c.display();
             ++index;
         }
+        std::cout << "\n";
     }
 
     bool IsSolved() const
@@ -283,24 +286,64 @@ sudoku* SolveSudoku(sudoku *s)
 // -----------------------------------------------------------------------------
 int main(int argc, char *argv[])
 {
-    std::string puzzle("306508400520000000087000031003010080900863005050090600130000250000000074005206300");
-    std::string easy_puzzle("003020600900305001001806400008102900700000008006708200002609500800203009005010300");
-    std::string hard_puzzle("4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......");
+    std::string random_puzzle ("306508400520000000087000031003010080900863005050090600130000250000000074005206300");
+    std::string easy_puzzle   ("003020600900305001001806400008102900700000008006708200002609500800203009005010300");
+    std::string hard_puzzle   ("4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......");
     std::string hardest_puzzle(".....6....59.....82....8....45........3........6..3.54...325..6..................");
 
-    std::cout << hardest_puzzle << "\n";
-    sudoku s(hardest_puzzle);
-    // s.display();
-
-    sudoku *solved = SolveSudoku(&s);
-    std::cout << "\n";
-
-    if ( solved )
+    if ( 3 != argc || (argc == 2 && std::string(argv[1]) == "-h") )
     {
-        std::cout << "Solution...\n";
-        solved->display();
+        std::cout << "Usage:\n";
+        std::cout << "\tTo solve a puzzle use command: ./norsud -p <puzzle>\n";
+        std::cout << "\tTo solve puzzles listed in a file use command: ./norsud -f <file>\n";
+        return 0;
     }
 
-    std::cout << "\n";
-    return 0;
+    if ( std::string(argv[1]) == "-p" )
+    {
+        std::string puzzle = argv[2];
+        sudoku s(puzzle);
+        sudoku *sol = SolveSudoku(&s);
+        if ( sol )
+            sol->display();
+        if ( sol != &s )
+            delete sol;
+        return 0;
+    }
+
+    if ( std::string(argv[1]) == "-f" )
+    {
+        time_t begin = clock();
+
+        std::ifstream file(argv[2]);
+
+        if ( !file.is_open() )
+        {
+            std::cout << "Error opening file\n";
+            return 1;
+        }
+
+        int count = 0;
+        while( !file.eof() )
+        {
+            std::string puzzle;
+            file >> puzzle;
+            if ( 81 != puzzle.size() )
+                continue;
+            std::cout << puzzle << "\n";
+            sudoku s(puzzle);
+            sudoku *sol = SolveSudoku(&s);
+            if ( sol )
+                sol->display();
+            if ( sol != &s )
+                delete sol;
+            ++count;
+        }
+
+        time_t end = clock();
+        std::cout << "Solved " << count << " puzzles in " << 1000*(end-begin)/CLOCKS_PER_SEC << " ms\n";
+        return 0;
+    }
+
+    return 1;
 }
