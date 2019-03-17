@@ -10,10 +10,6 @@
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
-static const float LOG2 = std::log(2.0f);
-
-// -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
 constexpr std::array< std::array<uint16_t, 20>, 81 > _neighbours { {
     { 1, 2, 3, 4, 5, 6, 7, 8, 9, 18, 27, 36, 45, 54, 63, 72, 10, 11, 19, 20 },
     { 0, 2, 3, 4, 5, 6, 7, 8, 10, 19, 28, 37, 46, 55, 64, 73, 9, 11, 18, 20 },
@@ -136,7 +132,7 @@ struct cell
         if ( !IsPowerOfTwo() )
             return uint16_t(-1);
 
-        return static_cast<uint16_t>(log(_bits)/LOG2 + 1);
+        return static_cast<uint16_t>(log(_bits)/log(2) + 1);
    }
 
     // to be removed
@@ -156,13 +152,13 @@ struct cell
         return !IsPowerOfTwo();
     }
 
-    void display() const
+    void display(bool displayBitsIfNotSet = false) const
     {
         int bitcount = NumSetBits(_bits);
-        if ( bitcount == 9 )
-            std::cout << std::setw(3) << 0 << " ";
-        else if ( bitcount == 1 )
-            std::cout << std::setw(3) << int(log(_bits) / log(2)) + 1<< " ";
+        if ( bitcount == 1 )
+            std::cout << int(log(_bits) / log(2)) + 1<< " ";
+        else if ( bitcount == 9 || !displayBitsIfNotSet )
+            std::cout << "." << " ";
         else
         {
             assert(bitcount <= 9);
@@ -197,14 +193,20 @@ public:
 
     void display()
     {
-        int index = 0;
-        for ( auto c : _board )
+        for ( int ii = 0; ii < 81; ++ii )
         {
-            if ( index % 9 == 0 )
-                std::cout << "\n";
+            if ( ii == 0 )
+                std::cout << "\n+-------+-------+-------+\n| ";
 
-            c.display();
-            ++index;
+            _board[ii].display();
+
+            if ( (ii + 1) % 27 == 0 )
+                std::cout << ((ii == 80) ? "|\n+-------+-------+-------+\n"
+                                         : "|\n+-------+-------+-------+\n| ");
+            else if ( (ii + 1) % 9 == 0 )
+                std::cout << "|\n| ";
+            else if ( (ii + 1) % 3 == 0 )
+                std::cout << "| ";
         }
         std::cout << "\n";
     }
